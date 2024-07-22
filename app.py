@@ -17,7 +17,7 @@ from gtts import gTTS
 from deep_translator import GoogleTranslator  
 
 def load_cohere_api_key():
-    st.write("Environment Variables:", os.environ)  # Print all environment variables for debugging
+    # st.write("Environment Variables:", os.environ)  # Print all environment variables for debugging
     try:
         api_key = os.environ["COHERE_API_KEY"]
         st.write(f"Loaded COHERE_API_KEY: {api_key}")
