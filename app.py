@@ -17,13 +17,13 @@ from gtts import gTTS
 from deep_translator import GoogleTranslator  
 
 def load_cohere_api_key():
-    st.write("Environment Variables:", os.environ)  # Print all environment variables for debugging
+    # st.write("Environment Variables:", os.environ)  # Print all environment variables for debugging
     try:
         api_key = os.environ["COHERE_API_KEY"]
         st.write(f"Loaded COHERE_API_KEY: {api_key}")
         return api_key
     except KeyError as e:
-        st.write(f"KeyError: {e}. Ensure 'COHERE_API_KEY' is added to secrets.")
+        # st.write(f"KeyError: {e}. Ensure 'COHERE_API_KEY' is added to secrets.")
         raise KeyError(f"KeyError: {e}. Ensure 'COHERE_API_KEY' is added to secrets.")
 
 def process_text(text, chunk_size, chunk_overlap):
@@ -177,7 +177,6 @@ def answer_question(question, text, co):
 
 class PDF(FPDF):
     def header(self):
-        # Only add a header if it's set
         if hasattr(self, 'header_text'):
             self.set_font('DejaVu', '', 14)
             self.cell(0, 10, self.header_text, 0, 1, 'L')
@@ -195,29 +194,23 @@ class PDF(FPDF):
 def generate_pdf_report(summary_text, translated_summary, qna_history):
     pdf = PDF()
 
-    # Add the DejaVu font
-    pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
-
-    # Set the font once it's added
+    font_path = os.path.join(os.path.dirname(__file__), 'DejaVuSans.ttf')
+    pdf.add_font('DejaVu', '', font_path, uni=True)
     pdf.set_font('DejaVu', '', 12)
 
     pdf.add_page()
-
-    # Write the summary
     pdf.set_left_margin(10)
     pdf.set_right_margin(10)
     pdf.set_xy(10, 30)
     pdf.chapter_title("Summary:")
     pdf.chapter_body(summary_text if summary_text else "No summary available.")
 
-    # Conditionally add the translated summary
     if translated_summary and translated_summary != summary_text:
         pdf.add_page()
         pdf.header_text = "Translated Summary"
         pdf.header()
         pdf.chapter_body(translated_summary)
 
-    # Optionally add Q&A history
     if qna_history:
         pdf.add_page()
         pdf.header_text = "Q&A History"
@@ -281,18 +274,24 @@ def display_pptx(file):
     images = extract_slide_images(file)
     for idx, img in enumerate(images):
         st.image(img, caption=f'Slide {idx + 1}', use_column_width=True)
-
 def display_docx_as_pdf(file):
+    # Extract text from the DOCX file
     text = extract_text_from_docx(file)
-    pdf_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    pdf = PDF()
-    pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
-    pdf.set_font("DejaVu", size=12)
-    pdf.add_page()
-    pdf.multi_cell(0, 10, text)
-    pdf.output(pdf_file.name)
-    pdf_file.seek(0)
-    st.download_button("Download PDF", pdf_file, file_name="document.pdf", mime="application/pdf")
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as pdf_file:
+        pdf = PDF()
+        font_path = os.path.join(os.path.dirname(__file__), 'DejaVuSans.ttf')
+        pdf.add_font('DejaVu', '', font_path, uni=True)
+        pdf.set_font("DejaVu", size=12)
+        pdf.add_page()
+        pdf.multi_cell(0, 10, text)
+        pdf.output(pdf_file.name)
+        
+        pdf_file.seek(0)
+        pdf_data = pdf_file.read()
+    
+    st.download_button("Download PDF", pdf_data, file_name="document.pdf", mime="application/pdf")
+
 
 def main():
     st.set_page_config(page_title="Document Summarizer and Q&A", layout="wide")
