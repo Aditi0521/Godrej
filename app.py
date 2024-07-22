@@ -17,13 +17,10 @@ from gtts import gTTS
 from deep_translator import GoogleTranslator  
 
 def load_cohere_api_key():
-    # st.write("Environment Variables:", os.environ)  # Print all environment variables for debugging
     try:
         api_key = os.environ["COHERE_API_KEY"]
-        st.write(f"Loaded COHERE_API_KEY: {api_key}")
         return api_key
     except KeyError as e:
-        # st.write(f"KeyError: {e}. Ensure 'COHERE_API_KEY' is added to secrets.")
         raise KeyError(f"KeyError: {e}. Ensure 'COHERE_API_KEY' is added to secrets.")
 
 def process_text(text, chunk_size, chunk_overlap):
@@ -223,7 +220,6 @@ def generate_pdf_report(summary_text, translated_summary, qna_history):
 
     return pdf_file_path
 
-
 def display_pdf(file):
     file.seek(0)
     pdf_document = fitz.open(stream=file.read(), filetype="pdf")
@@ -233,47 +229,6 @@ def display_pdf(file):
         img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
         st.image(img, caption=f'Page {page_num+1}', use_column_width=True)
 
-def extract_slide_images(file):
-    prs = Presentation(file)
-    images = []
-    for slide in prs.slides:
-        slide_image = render_slide_as_image(slide, prs)
-        images.append(slide_image)
-    return images
-
-def render_slide_as_image(slide, prs, max_width=1024, max_height=768):
-    slide_width = prs.slide_width
-    slide_height = prs.slide_height
-
-    # Calculate scaling factor to fit slide within max dimensions
-    scaling_factor = min(max_width / slide_width, max_height / slide_height)
-
-    # New dimensions
-    new_width = int(slide_width * scaling_factor)
-    new_height = int(slide_height * scaling_factor)
-
-    # Create a blank image with white background
-    img = Image.new('RGB', (new_width, new_height), 'white')
-    draw = ImageDraw.Draw(img)
-
-    # Draw shapes, text, and images
-    for shape in slide.shapes:
-        if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
-            try:
-                image = shape.image
-                image_bytes = io.BytesIO(image.blob)
-                pil_image = Image.open(image_bytes)
-                pil_image = pil_image.resize((new_width, new_height))
-                img.paste(pil_image, (0, 0))
-            except Exception as e:
-                print(f"Error rendering picture: {e}")
-
-    return img
-
-def display_pptx(file):
-    images = extract_slide_images(file)
-    for idx, img in enumerate(images):
-        st.image(img, caption=f'Slide {idx + 1}', use_column_width=True)
 def display_docx_as_pdf(file):
     # Extract text from the DOCX file
     text = extract_text_from_docx(file)
@@ -292,7 +247,6 @@ def display_docx_as_pdf(file):
     
     st.download_button("Download PDF", pdf_data, file_name="document.pdf", mime="application/pdf")
 
-
 def main():
     st.set_page_config(page_title="Document Summarizer and Q&A", layout="wide")
 
@@ -309,8 +263,6 @@ def main():
         if uploaded_file is not None:
             if doc_type == "PDF":
                 display_pdf(uploaded_file)
-            elif doc_type == "PPT":
-                display_pptx(uploaded_file)
             elif doc_type == "Word":
                 display_docx_as_pdf(uploaded_file)
             uploaded_file.seek(0)
