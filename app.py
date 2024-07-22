@@ -17,10 +17,10 @@ from gtts import gTTS
 from deep_translator import GoogleTranslator  
 
 def load_cohere_api_key():
-    # st.write("Environment Variables:", os.environ)  # Print all environment variables for debugging
+    st.write("Environment Variables:", os.environ)  # Print all environment variables for debugging
     try:
         api_key = os.environ["COHERE_API_KEY"]
-        # st.write(f"Loaded COHERE_API_KEY: {api_key}")
+        st.write(f"Loaded COHERE_API_KEY: {api_key}")
         return api_key
     except KeyError as e:
         st.write(f"KeyError: {e}. Ensure 'COHERE_API_KEY' is added to secrets.")
@@ -230,6 +230,7 @@ def generate_pdf_report(summary_text, translated_summary, qna_history):
 
     return pdf_file_path
 
+
 def display_pdf(file):
     file.seek(0)
     pdf_document = fitz.open(stream=file.read(), filetype="pdf")
@@ -284,9 +285,10 @@ def display_pptx(file):
 def display_docx_as_pdf(file):
     text = extract_text_from_docx(file)
     pdf_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    pdf = FPDF()
+    pdf = PDF()
+    pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
+    pdf.set_font("DejaVu", size=12)
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
     pdf.multi_cell(0, 10, text)
     pdf.output(pdf_file.name)
     pdf_file.seek(0)
